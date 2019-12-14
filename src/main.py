@@ -7,8 +7,9 @@ import numpy as np
 import PIL
 import cv2
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 # Kerasa / TensorFlow
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '5'
 from keras.models import load_model
 from layers import BilinearUpSampling2D
 from loss import depth_loss_function
@@ -32,7 +33,6 @@ model = load_model(args.model, custom_objects=custom_objects, compile=False)
 
 print('\nModel loaded ({0}).'.format(args.model))
 
-
 def get_img_arr(image):
     im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     im = cv2.resize(im, (640, 480))
@@ -46,14 +46,12 @@ out_video_name = 'output.avi'
 fps = int(cap.get(cv2.CAP_PROP_FPS))
 out = cv2.VideoWriter(out_video_name, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps, (1280, 480))
 
-
 def display_single_image(output, inputs=None, is_colormap=True):
     import matplotlib.pyplot as plt
 
     plasma = plt.get_cmap('plasma')
 
     imgs = []
-
     imgs.append(inputs)
 
     ##rescale output
@@ -73,6 +71,7 @@ def display_single_image(output, inputs=None, is_colormap=True):
 
 count = 0
 ret = True
+
 while ret:
     ret, image = cap.read()
     if ret is False:
