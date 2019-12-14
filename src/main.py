@@ -86,3 +86,14 @@ while ret:
     plt.savefig(os.path.join('image_results', filename), bbox_inches='tight')
 
 
+def main():
+    rospy.init_node('monodepth')
+
+    pub_image_depth = rospy.Publisher('image_depth', Image, queue_size=1)
+
+    sub_image = rospy.Subscriber('image_raw', Image, process_image, queue_size=10)
+
+    rospy.spin()
+
+if __name__ == '__main__':
+    main()
