@@ -1,15 +1,13 @@
 #!/usr/bin/env python2
 
-import os
 import time
 import numpy as np
 import cv2
 import rospkg
 import rospy
 import keras
+import tensorflow as tf
 
-#import tensorflow
-#from tensorflow import keras
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -17,10 +15,19 @@ from utils import scale_up, predict
 from layers import BilinearUpSampling2D
 from loss import depth_loss_function
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
 class MonoDepth():
     def __init__(self):
+
+        # Setup tensorflow session
+        self.config = tf.ConfigProto(
+            device_count={'GPU': 1},
+            intra_op_parallelism_threads=1,
+            allow_soft_placement=True
+        )
+        self.config.gpu_options.allow_growth = True
+        self.config.gpu_options.per_process_gpu_memory_fraction = 0.6
+
+        self.session = tf.Session(config=self.config)
 
         # Get parameters
         self.topic_color = rospy.get_param('~topic_color', '/camera/image_raw')
@@ -28,7 +35,7 @@ class MonoDepth():
 
         # Read keras model
         self.rospack = rospkg.RosPack()
-        self.model_path = self.rospack.get_path("monodepth") + "/models/nyu.h5"
+        self.model_path = self.rospack.get_path("monodepth") + "/models/kitti.h5"
 
         # Custom object needed for inference and training
         self.start = time.time()
@@ -39,7 +46,7 @@ class MonoDepth():
         self.model._make_predict_function()
 
         # Image publisher
-        self.image_pub = rospy.Publisher(self.topic_depth, Image, queue=1)
+        self.image_pub = rospy.Publisher(self.topic_depth, Image, queue_size=1)
 
         # Image subscriber
         self.bridge = CvBridge()
@@ -65,11 +72,16 @@ class MonoDepth():
         arr = np.clip(np.asarray(im, dtype=float) / 255, 0, 1)
 
         # Predict depth image
-        output = scale_up(2, predict(self.model, arr, batch_size=1))
+        with self.session.as_default():
+            with self.session.graph.as_default():
+                result = predict(self.model, arr, batch_size=1)
+
+        # Resize and reshape output
+        output = scale_up(2, result)
         pred = output.reshape(output.shape[1], output.shape[2], 1)
 
         # Publish depth image
-        # self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
+        self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
 
 def main():
     rospy.init_node("monodepth")
