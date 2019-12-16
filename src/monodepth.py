@@ -4,15 +4,16 @@ import os
 import time
 import numpy as np
 import cv2
-from utils import scale_up, predict
-
-from keras.models import load_model
-from layers import BilinearUpSampling2D
-from loss import depth_loss_function
 import rospkg
 import rospy
+
+from keras.models import load_model
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+
+from utils import scale_up, predict
+from layers import BilinearUpSampling2D
+from loss import depth_loss_function
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -35,10 +36,6 @@ class MonoDepth():
         self.model = load_model(self.model_path, custom_objects=self.custom_objects, compile=False)
         self.model._make_predict_function()
 
-        # Counter
-        self.count = 0
-        self.ret = True
-
         # Image publisher
         self.image_pub = rospy.Publisher(self.topic_depth, Image)
 
@@ -46,34 +43,31 @@ class MonoDepth():
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber(self.topic_color, Image, self.image_callback)
 
-    # Get image data as a numpy array to be passed for processing.
-    def get_img_arr(self, image):
-        im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        im = cv2.resize(im, (640, 480))
-        x = np.clip(np.asarray(im, dtype=float) / 255, 0, 1)
-        return x
-
     # Callback to receive and process image published.
     #
     # After processing it publishes back the estimated depth result
     def image_callback(self, data):
+        # Convert message to opencv image
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
 
+        # Display image
         cv2.imshow("Image window", image)
         cv2.waitKey(1)
 
-        #self.count += 1
-        img_arr = self.get_img_arr(image)
-        output = scale_up(2, predict(self.model, img_arr, batch_size=1))
+        # Get image data as a numpy array to be passed for processing.
+        im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        im = cv2.resize(im, (640, 480))
+        arr = np.clip(np.asarray(im, dtype=float) / 255, 0, 1)
+
+        # Predict depth image
+        output = scale_up(2, predict(self.model, arr, batch_size=1))
         pred = output.reshape(output.shape[1], output.shape[2], 1)
 
-        self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
-
-
-
+        # Publish depth image
+        # self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
 
 def main():
     rospy.init_node("monodepth")

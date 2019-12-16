@@ -10,14 +10,16 @@
 
 - Install Python 2 and ROS dependencies
 
-```
+```bash
 apt-get install python python-pip
 pip install rosdep rospkg rosinstall_generator rosinstall wstool vcstools catkin_tools catkin_pkg
 ```
 
 - Install project dependencies
 
-`pip install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-python pydot GraphViz` 
+```bash
+pip install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-python pydot GraphViz tk
+```
 
 
 

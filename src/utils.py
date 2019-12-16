@@ -1,5 +1,7 @@
 import numpy as np
+
 from PIL import Image
+from skimage.transform import resize
 
 def depth_norm(x, maxDepth):
     return maxDepth / x
@@ -16,7 +18,6 @@ def predict(model, images, minDepth=10, maxDepth=1000, batch_size=2):
     return np.clip(depth_norm(predictions, maxDepth=1000), minDepth, maxDepth) / maxDepth
 
 def scale_up(scale, images):
-    from skimage.transform import resize
     scaled = []
     
     for i in range(len(images)):
@@ -37,65 +38,6 @@ def to_multichannel(i):
     if i.shape[2] == 3: return i
     i = i[:,:,0]
     return np.stack((i,i,i), axis=2)
-        
-def display_images(outputs, inputs=None, gt=None, is_colormap=True, is_rescale=True):
-    import matplotlib.pyplot as plt
-    import skimage
-    from skimage.transform import resize
-
-    plasma = plt.get_cmap("plasma")
-
-    shape = (outputs[0].shape[0], outputs[0].shape[1], 3)
-    
-    all_images = []
-
-    for i in range(outputs.shape[0]):
-        imgs = []
-        
-        if isinstance(inputs, (list, tuple, np.ndarray)):
-            x = to_multichannel(inputs[i])
-            x = resize(x, shape, preserve_range=True, mode="reflect", anti_aliasing=True )
-            imgs.append(x)
-
-        if isinstance(gt, (list, tuple, np.ndarray)):
-            x = to_multichannel(gt[i])
-            x = resize(x, shape, preserve_range=True, mode="reflect", anti_aliasing=True )
-            imgs.append(x)
-
-        if is_colormap:
-            rescaled = outputs[i][:,:,0]
-            if is_rescale:
-                rescaled = rescaled - np.min(rescaled)
-                rescaled = rescaled / np.max(rescaled)
-            imgs.append(plasma(rescaled)[:,:,:3])
-        else:
-            imgs.append(to_multichannel(outputs[i]))
-
-        img_set = np.hstack(imgs)
-        all_images.append(img_set)
-
-    all_images = np.stack(all_images)
-    
-    return skimage.util.montage(all_images, multichannel=True, fill=(0,0,0))
-
-def save_images(filename, outputs, inputs=None, gt=None, is_colormap=True, is_rescale=False):
-    montage =  display_images(outputs, inputs, is_colormap, is_rescale)
-    im = Image.fromarray(np.uint8(montage*255))
-    im.save(filename)
-
-def load_test_data(test_data_zip_file="nyu_test.zip"):
-    #print("Loading test data...", end="")
-    import numpy as np
-    from data import extract_zip
-
-    data = extract_zip(test_data_zip_file)
-    from io import BytesIO
-
-    rgb = np.load(BytesIO(data["eigen_test_rgb.npy"]))
-    depth = np.load(BytesIO(data["eigen_test_depth.npy"]))
-    crop = np.load(BytesIO(data["eigen_test_crop.npy"]))
-    #print("Test data loaded.\n")
-    return {"rgb":rgb, "depth":depth, "crop":crop}
 
 def evaluate(model, rgb, depth, crop, batch_size=6, verbose=True):
     # Error computaiton based on https://github.com/tinghuiz/SfMLearner
@@ -148,3 +90,54 @@ def evaluate(model, rgb, depth, crop, batch_size=6, verbose=True):
         print("{:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}".format(e[0],e[1],e[2],e[3],e[4],e[5]))
 
     return e
+
+# def save_images(filename, outputs, inputs=None, gt=None, is_colormap=True, is_rescale=False):
+#     montage =  display_images(outputs, inputs, is_colormap, is_rescale)
+#     im = Image.fromarray(np.uint8(montage*255))
+#     im.save(filename)
+
+# def display_images(outputs, inputs=None, gt=None, is_colormap=True, is_rescale=True):
+#     plasma = plt.get_cmap("plasma")
+#     shape = (outputs[0].shape[0], outputs[0].shape[1], 3)
+#
+#     all_images = []
+#
+#     for i in range(outputs.shape[0]):
+#         imgs = []
+#
+#         if isinstance(inputs, (list, tuple, np.ndarray)):
+#             x = to_multichannel(inputs[i])
+#             x = resize(x, shape, preserve_range=True, mode="reflect", anti_aliasing=True )
+#             imgs.append(x)
+#
+#         if isinstance(gt, (list, tuple, np.ndarray)):
+#             x = to_multichannel(gt[i])
+#             x = resize(x, shape, preserve_range=True, mode="reflect", anti_aliasing=True )
+#             imgs.append(x)
+#
+#         if is_colormap:
+#             rescaled = outputs[i][:,:,0]
+#             if is_rescale:
+#                 rescaled = rescaled - np.min(rescaled)
+#                 rescaled = rescaled / np.max(rescaled)
+#             imgs.append(plasma(rescaled)[:,:,:3])
+#         else:
+#             imgs.append(to_multichannel(outputs[i]))
+#
+#         img_set = np.hstack(imgs)
+#         all_images.append(img_set)
+#
+#     all_images = np.stack(all_images)
+#
+#     return skimage.util.montage(all_images, multichannel=True, fill=(0,0,0))
+
+# def load_test_data(test_data_zip_file="nyu_test.zip"):
+#     #print("Loading test data...", end="")
+#     data = extract_zip(test_data_zip_file)
+#
+#     rgb = np.load(BytesIO(data["eigen_test_rgb.npy"]))
+#     depth = np.load(BytesIO(data["eigen_test_depth.npy"]))
+#     crop = np.load(BytesIO(data["eigen_test_crop.npy"]))
+#     #print("Test data loaded.\n")
+#     return {"rgb":rgb, "depth":depth, "crop":crop}
+
