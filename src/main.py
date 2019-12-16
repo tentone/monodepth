@@ -21,77 +21,100 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
-def get_img_arr(image):
-    im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    im = cv2.resize(im, (640, 480))
-    x = np.clip(np.asarray(im, dtype=float) / 255, 0, 1)
-    return x
+class MonoDepth():
+    def __init__(self):
+        self.image_pub = rospy.Publisher("image_depth", Image)
 
-def display_single_image(output, inputs=None, is_colormap=True):
-    import matplotlib.pyplot as plt
-    plasma = plt.get_cmap('plasma')
-    imgs = []
-    imgs.append(inputs)
+        self.bridge = CvBridge()
+        self.image_sub = rospy.Subscriber("image_raw", Image, self.callback)
 
-    ##rescale output
-    out_min = np.min(output)
-    out_max = np.max(output)
-    output = output - out_min
-    outputs = output/out_max
+        # Argument Parser
+        #parser = argparse.ArgumentParser(description='High Quality Monocular Depth Estimation via Transfer Learning')
+        #parser.add_argument('--model', default='nyu.h5', type=str, help='Trained Keras model file.')
+        #parser.add_argument('--input', default='test/*.mov', type=str, help='Path to Video')
+        #args = parser.parse_args()
 
-    if is_colormap:
-        rescaled = outputs[:, :, 0]
-        pred_x = plasma(rescaled)[:, :, :3]
-        imgs.append(pred_x)
+        # Custom object needed for inference and training
+        #start = time.time()
+        #custom_objects = {'BilinearUpSampling2D': BilinearUpSampling2D, 'depth_loss_function': depth_loss_function}
 
-    img_set = np.hstack(imgs)
+        # Load model into GPU / CPU
+        #model = load_model(args.model, custom_objects=custom_objects, compile=False)
 
-    return img_set
+        # Video output
+        #video_name = args.input
+        # cap = cv2.VideoCapture(video_name)
 
+        # Video output
+        # out_video_name = 'output.avi'
+        # fps = int(cap.get(cv2.CAP_PROP_FPS))
+        # out = cv2.VideoWriter(out_video_name, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps, (1280, 480))
 
-# Argument Parser
-#parser = argparse.ArgumentParser(description='High Quality Monocular Depth Estimation via Transfer Learning')
-#parser.add_argument('--model', default='nyu.h5', type=str, help='Trained Keras model file.')
-#parser.add_argument('--input', default='test/*.mov', type=str, help='Path to Video')
-#args = parser.parse_args()
+        #count = 0
+        #ret = True
 
-# Custom object needed for inference and training
-start = time.time()
-custom_objects = {'BilinearUpSampling2D': BilinearUpSampling2D, 'depth_loss_function': depth_loss_function}
+        #while ret:
+         #   ret, image = cap.read()
+          #  if ret is False:
+           #     break
+            #img_arr = get_img_arr(image)
+            #count += 1
+            #output = scale_up(2, predict(model, img_arr, batch_size=1))
+            #pred = output.reshape(output.shape[1], output.shape[2], 1)
+            #img_set = display_single_image(pred, img_arr)
+            #plt.figure(figsize=(20, 10))
+            #plt.imshow(img_set)
+            #filename = 'img_' + str(count).zfill(4) + '.png'
+            #plt.savefig(os.path.join('image_results', filename), bbox_inches='tight')
 
-# Load model into GPU / CPU
-model = load_model(args.model, custom_objects=custom_objects, compile=False)
+    def get_img_arr(image):
+        im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        im = cv2.resize(im, (640, 480))
+        x = np.clip(np.asarray(im, dtype=float) / 255, 0, 1)
+        return x
 
-video_name = args.input
-cap = cv2.VideoCapture(video_name)
-out_video_name = 'output.avi'
-fps = int(cap.get(cv2.CAP_PROP_FPS))
-out = cv2.VideoWriter(out_video_name, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps, (1280, 480))
+    def display_single_image(output, inputs=None, is_colormap=True):
+        import matplotlib.pyplot as plt
+        plasma = plt.get_cmap('plasma')
+        imgs = []
+        imgs.append(inputs)
 
-count = 0
-ret = True
+        ##rescale output
+        out_min = np.min(output)
+        out_max = np.max(output)
+        output = output - out_min
+        outputs = output/out_max
 
-while ret:
-    ret, image = cap.read()
-    if ret is False:
-        break
-    img_arr = get_img_arr(image)
-    count += 1
-    output = scale_up(2, predict(model, img_arr, batch_size=1))
-    pred = output.reshape(output.shape[1], output.shape[2], 1)
-    img_set = display_single_image(pred, img_arr)
-    plt.figure(figsize=(20, 10))
-    plt.imshow(img_set)
-    filename = 'img_' + str(count).zfill(4) + '.png'
-    plt.savefig(os.path.join('image_results', filename), bbox_inches='tight')
+        if is_colormap:
+            rescaled = outputs[:, :, 0]
+            pred_x = plasma(rescaled)[:, :, :3]
+            imgs.append(pred_x)
 
+        img_set = np.hstack(imgs)
+
+        return img_set
+
+    # Callback to receive and process image published.
+    #
+    # After processing it publishes back the estimated depth result
+    def image_callback(self,data):
+        try:
+            image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+
+        cv2.imshow("Image window", image)
+        cv2.waitKey(1)
+
+        #try:
+        #    self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+        #except CvBridgeError as e:
+        #    print(e)
 
 def main():
     rospy.init_node('monodepth')
 
-    pub_image_depth = rospy.Publisher('image_depth', Image, queue_size=1)
-
-    sub_image = rospy.Subscriber('image_raw', Image, process_image, queue_size=10)
+    depth = MonoDepth()
 
     rospy.spin()
 
