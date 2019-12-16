@@ -6,8 +6,10 @@ import numpy as np
 import cv2
 import rospkg
 import rospy
+import keras
 
-from keras.models import load_model
+#import tensorflow
+#from tensorflow import keras
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -33,11 +35,11 @@ class MonoDepth():
         self.custom_objects = {"BilinearUpSampling2D": BilinearUpSampling2D, "depth_loss_function": depth_loss_function}
 
         # Load model into GPU / CPU
-        self.model = load_model(self.model_path, custom_objects=self.custom_objects, compile=False)
+        self.model = keras.models.load_model(self.model_path, custom_objects=self.custom_objects, compile=False)
         self.model._make_predict_function()
 
         # Image publisher
-        self.image_pub = rospy.Publisher(self.topic_depth, Image)
+        self.image_pub = rospy.Publisher(self.topic_depth, Image, queue=1)
 
         # Image subscriber
         self.bridge = CvBridge()
