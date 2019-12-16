@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import glob
@@ -28,20 +28,17 @@ class MonoDepth():
         self.image_pub = rospy.Publisher("image_depth", Image)
 
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("image_raw", Image, self.callback)
+        self.image_sub = rospy.Subscriber("image_raw", Image, self.image_callback)
 
-        # Argument Parser
-        #parser = argparse.ArgumentParser(description='High Quality Monocular Depth Estimation via Transfer Learning')
-        #parser.add_argument('--model', default='nyu.h5', type=str, help='Trained Keras model file.')
-        #parser.add_argument('--input', default='test/*.mov', type=str, help='Path to Video')
-        #args = parser.parse_args()
+
+        self.model = 'nyu.h5'
 
         # Custom object needed for inference and training
-        #start = time.time()
-        #custom_objects = {'BilinearUpSampling2D': BilinearUpSampling2D, 'depth_loss_function': depth_loss_function}
+        self.start = time.time()
+        self.custom_objects = {'BilinearUpSampling2D': BilinearUpSampling2D, 'depth_loss_function': depth_loss_function}
 
         # Load model into GPU / CPU
-        #model = load_model(args.model, custom_objects=custom_objects, compile=False)
+        self.model = load_model(self.model, custom_objects=self.custom_objects, compile=False)
 
         # Video output
         #video_name = args.input
@@ -52,8 +49,8 @@ class MonoDepth():
         # fps = int(cap.get(cv2.CAP_PROP_FPS))
         # out = cv2.VideoWriter(out_video_name, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps, (1280, 480))
 
-        #count = 0
-        #ret = True
+        self.count = 0
+        self.ret = True
 
         #while ret:
          #   ret, image = cap.read()
