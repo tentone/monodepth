@@ -1,6 +1,6 @@
 ## Mono Depth ROS
  - ROS node used to estimated depth from monocular RGB data.
- - Should be used with Python 3.X and ROS
+ - Should be used with Python 2.X and ROS
  - The original code is at the repo [Dense Depth Original Code](https://github.com/ialhashim/DenseDepth)
  - [High Quality Monocular Depth Estimation via Transfer Learning](https://arxiv.org/abs/1812.11941) by Ibraheem Alhashim and Peter Wonka
 
@@ -8,16 +8,16 @@
 
 ### Install
 
-- Install Python 3 and ROS dependencies
+- Install Python 2 and ROS dependencies
 
 ```
-apt-get install python3 python3-pip
-pip3 install rosdep rospkg rosinstall_generator rosinstall wstool vcstools catkin_tools catkin_pkg
+apt-get install python python-pip
+pip install rosdep rospkg rosinstall_generator rosinstall wstool vcstools catkin_tools catkin_pkg
 ```
 
-- Install python dependencies
+- Install project dependencies
 
-`pip3 install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-python pydot GraphViz` 
+`pip install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-python pydot GraphViz` 
 
 
 

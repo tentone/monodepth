@@ -1,17 +1,19 @@
 import numpy as np
 from PIL import Image
 
-def DepthNorm(x, maxDepth):
+def depth_norm(x, maxDepth):
     return maxDepth / x
 
 def predict(model, images, minDepth=10, maxDepth=1000, batch_size=2):
     # Support multiple RGBs, one RGB image, even grayscale 
     if len(images.shape) < 3: images = np.stack((images,images,images), axis=2)
     if len(images.shape) < 4: images = images.reshape((1, images.shape[0], images.shape[1], images.shape[2]))
+
     # Compute predictions
     predictions = model.predict(images, batch_size=batch_size)
+
     # Put in expected range
-    return np.clip(DepthNorm(predictions, maxDepth=1000), minDepth, maxDepth) / maxDepth
+    return np.clip(depth_norm(predictions, maxDepth=1000), minDepth, maxDepth) / maxDepth
 
 def scale_up(scale, images):
     from skimage.transform import resize
@@ -20,7 +22,7 @@ def scale_up(scale, images):
     for i in range(len(images)):
         img = images[i]
         output_shape = (scale * img.shape[0], scale * img.shape[1])
-        scaled.append( resize(img, output_shape, order=1, preserve_range=True, mode='reflect', anti_aliasing=True ) )
+        scaled.append( resize(img, output_shape, order=1, preserve_range=True, mode="reflect", anti_aliasing=True ) )
 
     return np.stack(scaled)
 
@@ -41,7 +43,7 @@ def display_images(outputs, inputs=None, gt=None, is_colormap=True, is_rescale=T
     import skimage
     from skimage.transform import resize
 
-    plasma = plt.get_cmap('plasma')
+    plasma = plt.get_cmap("plasma")
 
     shape = (outputs[0].shape[0], outputs[0].shape[1], 3)
     
@@ -52,12 +54,12 @@ def display_images(outputs, inputs=None, gt=None, is_colormap=True, is_rescale=T
         
         if isinstance(inputs, (list, tuple, np.ndarray)):
             x = to_multichannel(inputs[i])
-            x = resize(x, shape, preserve_range=True, mode='reflect', anti_aliasing=True )
+            x = resize(x, shape, preserve_range=True, mode="reflect", anti_aliasing=True )
             imgs.append(x)
 
         if isinstance(gt, (list, tuple, np.ndarray)):
             x = to_multichannel(gt[i])
-            x = resize(x, shape, preserve_range=True, mode='reflect', anti_aliasing=True )
+            x = resize(x, shape, preserve_range=True, mode="reflect", anti_aliasing=True )
             imgs.append(x)
 
         if is_colormap:
@@ -81,17 +83,19 @@ def save_images(filename, outputs, inputs=None, gt=None, is_colormap=True, is_re
     im = Image.fromarray(np.uint8(montage*255))
     im.save(filename)
 
-def load_test_data(test_data_zip_file='nyu_test.zip'):
-    print('Loading test data...', end='')
+def load_test_data(test_data_zip_file="nyu_test.zip"):
+    #print("Loading test data...", end="")
     import numpy as np
     from data import extract_zip
+
     data = extract_zip(test_data_zip_file)
     from io import BytesIO
-    rgb = np.load(BytesIO(data['eigen_test_rgb.npy']))
-    depth = np.load(BytesIO(data['eigen_test_depth.npy']))
-    crop = np.load(BytesIO(data['eigen_test_crop.npy']))
-    print('Test data loaded.\n')
-    return {'rgb':rgb, 'depth':depth, 'crop':crop}
+
+    rgb = np.load(BytesIO(data["eigen_test_rgb.npy"]))
+    depth = np.load(BytesIO(data["eigen_test_depth.npy"]))
+    crop = np.load(BytesIO(data["eigen_test_crop.npy"]))
+    #print("Test data loaded.\n")
+    return {"rgb":rgb, "depth":depth, "crop":crop}
 
 def evaluate(model, rgb, depth, crop, batch_size=6, verbose=True):
     # Error computaiton based on https://github.com/tinghuiz/SfMLearner
@@ -140,7 +144,7 @@ def evaluate(model, rgb, depth, crop, batch_size=6, verbose=True):
     e = depth_scores.mean(axis=1)
 
     if verbose:
-        print("{:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}".format('a1', 'a2', 'a3', 'rel', 'rms', 'log_10'))
+        print("{:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}".format("a1", "a2", "a3", "rel", "rms", "log_10"))
         print("{:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}".format(e[0],e[1],e[2],e[3],e[4],e[5]))
 
     return e
