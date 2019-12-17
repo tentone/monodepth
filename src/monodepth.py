@@ -17,17 +17,10 @@ from loss import depth_loss_function
 
 class MonoDepth():
     def __init__(self):
-
         # Setup tensorflow session
-        self.config = tf.ConfigProto(
-            device_count={'GPU': 1},
-            intra_op_parallelism_threads=1,
-            allow_soft_placement=True
-        )
-        self.config.gpu_options.allow_growth = True
-        self.config.gpu_options.per_process_gpu_memory_fraction = 0.6
-
-        self.session = tf.Session(config=self.config)
+        self.session = keras.backend.get_session()
+        self.init = tf.global_variables_initializer()
+        self.session.run(self.init)
 
         # Get parameters
         self.topic_color = rospy.get_param('~topic_color', '/camera/image_raw')
