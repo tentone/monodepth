@@ -56,26 +56,29 @@ class MonoDepth():
             print(e)
 
         # Display image
-        cv2.imshow("Image window", image)
-        cv2.waitKey(1)
+        # cv2.imshow("Image", image)
+        # cv2.waitKey(1)
 
         # Get image data as a numpy array to be passed for processing.
-        im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        im = cv2.resize(im, (640, 480))
-        arr = np.clip(np.asarray(im, dtype=float) / 255, 0, 1)
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # img = cv2.resize(img, (640, 480))
+        arr = np.clip(np.asarray(img, dtype=float) / 255, 0, 1)
 
         # Predict depth image
         with self.session.as_default():
             with self.session.graph.as_default():
-                result = predict(self.model, arr, batch_size=1)
+                result = predict(self.model, arr, minDepth=10, maxDepth=500, batch_size=1)
 
         # Resize and reshape output
-        #output = scale_up(2, result)
-        #pred = output.reshape(output.shape[1], output.shape[2], 1)
+        depth = result.reshape(result.shape[1], result.shape[2], 1)
 
-        print(result)
+        # Display depth
+        # cv2.imshow("Result", depth)
+        # cv2.waitKey(1)
+
         # Publish depth image
-        #self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
+        depth = 255 * depth
+        self.image_pub.publish(self.bridge.cv2_to_imgmsg(depth.astype(np.uint8), "mono8"))
 
 def main():
     rospy.init_node("monodepth")
