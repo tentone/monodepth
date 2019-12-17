@@ -8,7 +8,7 @@ import rospy
 import keras
 import tensorflow as tf
 
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2, PointField
 from cv_bridge import CvBridge, CvBridgeError
 
 from utils import scale_up, predict
@@ -25,6 +25,7 @@ class MonoDepth():
         # Get parameters
         self.topic_color = rospy.get_param('~topic_color', '/camera/image_raw')
         self.topic_depth = rospy.get_param('~topic_depth', '/camera/image_depth')
+        self.topic_pointcloud = rospy.get_param('~topic_depth', '/pointcloud')
 
         # Read keras model
         self.rospack = rospkg.RosPack()
@@ -44,6 +45,46 @@ class MonoDepth():
         # Image subscriber
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber(self.topic_color, Image, self.image_callback)
+
+    # Create a sensor_msgs.PointCloud2 from an array of points.
+    def xyzrgb_array_to_pointcloud2(self, depth, color, stamp=None, frame_id=None, seq=None):
+        msg = PointCloud2()
+        buf = []
+
+        if stamp:
+            msg.header.stamp = stamp
+        if frame_id:
+            msg.header.frame_id = frame_id
+        if seq:
+            msg.header.seq = seq
+
+        height, width, channels = depth.shape
+
+        if len(points.shape) == 3:
+            msg.height = points.shape[1]
+            msg.width = points.shape[0]
+        else:
+            N = len(points)
+            xyzrgb = np.array(np.hstack([points, colors]), dtype=np.float32)
+            msg.height = 1
+            msg.width = N
+
+        msg.fields = [
+            PointField('x', 0, PointField.FLOAT32, 1),
+            PointField('y', 4, PointField.FLOAT32, 1),
+            PointField('z', 8, PointField.FLOAT32, 1),
+            PointField('r', 12, PointField.FLOAT32, 1),
+            PointField('g', 16, PointField.FLOAT32, 1),
+            PointField('b', 20, PointField.FLOAT32, 1)
+        ]
+
+        msg.is_bigendian = False
+        msg.point_step = 24
+        msg.row_step = msg.point_step * N
+        msg.is_dense = True;
+        msg.data = xyzrgb.tostring()
+
+        return msg
 
     # Callback to receive and process image published.
     #
@@ -79,6 +120,8 @@ class MonoDepth():
         # Publish depth image
         depth = 255 * depth
         self.image_pub.publish(self.bridge.cv2_to_imgmsg(depth.astype(np.uint8), "mono8"))
+
+        #
 
 def main():
     rospy.init_node("monodepth")
