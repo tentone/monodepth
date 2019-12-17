@@ -1,12 +1,21 @@
 ## Mono Depth ROS
  - ROS node used to estimated depth from monocular RGB data.
  - Should be used with Python 2.X and ROS
- - The original code is at the repo [Dense Depth Original Code](https://github.com/ialhashim/DenseDepth)
+ - The original code is at the repository [Dense Depth Original Code](https://github.com/ialhashim/DenseDepth)
  - [High Quality Monocular Depth Estimation via Transfer Learning](https://arxiv.org/abs/1812.11941) by Ibraheem Alhashim and Peter Wonka
 
 
 
-### Install
+### Configuration
+
+- Topics subscribed by the ROS node
+  - /image/camera_raw
+- Topics published by the ROS node, containing depth and point cloud data generated.
+  - /image/depth
+
+
+
+### Setup
 
 - Install Python 2 and ROS dependencies
 
@@ -23,13 +32,21 @@ pip install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-
 
 
 
+### Pretrained models
 
-### Data
- - [NYU Depth V2 (50K)](https://s3-eu-west-1.amazonaws.com/densedepth/nyu_data.zip) (4.1 GB): You don't need to extract the dataset since the code loads the entire zip file into memory when training.
+ - Pre-trained keras models can be downloaded and placed in the models folder from the following links:
+    - [NYU Depth V2 (165MB)](https://s3-eu-west-1.amazonaws.com/densedepth/nyu.h5) 
+    - [KITTI (165MB)](https://s3-eu-west-1.amazonaws.com/densedepth/kitti.h5)
 
 
 
-### Pretrained models used
- - Pre-trained models can be downloaded and placed in the models folder.
- - [NYU Depth V2](https://s3-eu-west-1.amazonaws.com/densedepth/nyu.h5) (165 MB)
+
+### Datasets for training
+ - [NYU Depth V2 (50K)](https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html) 
+    - The NYU-Depth V2 data set is comprised of video sequences from a variety of indoor scenes as recorded by both the RGB and Depth cameras from the Microsoft Kinect.
+    - [Download dataset](https://s3-eu-west-1.amazonaws.com/densedepth/nyu_data.zip) (4.1 GB)
+ - [KITTI Dataset (80K)](http://www.cvlibs.net/datasets/kitti/) 
+    - Datasets captured by driving around the mid-size city of [Karlsruhe](http://maps.google.com/?ie=UTF8&z=15&ll=49.010627,8.405871&spn=0.018381,0.029826&t=k&om=1), in rural areas and on highways. Up to 15 cars and 30 pedestrians are visible per image.
+
+
 

@@ -70,11 +70,12 @@ class MonoDepth():
                 result = predict(self.model, arr, batch_size=1)
 
         # Resize and reshape output
-        output = scale_up(2, result)
-        pred = output.reshape(output.shape[1], output.shape[2], 1)
+        #output = scale_up(2, result)
+        #pred = output.reshape(output.shape[1], output.shape[2], 1)
 
+        print(result)
         # Publish depth image
-        self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
+        #self.image_pub.publish(self.bridge.cv2_to_imgmsg(pred, "bgr8"))
 
 def main():
     rospy.init_node("monodepth")
