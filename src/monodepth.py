@@ -121,7 +121,7 @@ class MonoDepth():
         # Predict depth image
         with self.session.as_default():
             with self.session.graph.as_default():
-                result = predict(self.model, arr, minDepth=10, maxDepth=500, batch_size=1)
+                result = predict(self.model, arr, batch_size=1)
 
         # Resize and reshape output
         depth = result.reshape(result.shape[1], result.shape[2], 1)
