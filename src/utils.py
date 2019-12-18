@@ -1,19 +1,23 @@
 import numpy as np
 from skimage.transform import resize
 
-def depth_norm(x, maxDepth):
-    return maxDepth / x
+def depth_norm(x, max_depth):
+    return max_depth / x
 
-def predict(model, images, minDepth=10, maxDepth=1000, batch_size=2):
-    # Support multiple RGBs, one RGB image, even grayscale 
-    if len(images.shape) < 3: images = np.stack((images,images,images), axis=2)
-    if len(images.shape) < 4: images = images.reshape((1, images.shape[0], images.shape[1], images.shape[2]))
+def predict(model, image, minDepth=10, maxDepth=1000, batch_size=2):
+    # Grayscale image
+    if len(image.shape) < 3:
+        image = np.stack((image, image, image), axis=2)
+
+    # RGB image
+    if len(image.shape) < 4:
+        image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
 
     # Compute predictions
-    predictions = model.predict(images, batch_size=batch_size)
+    predictions = model.predict(image, batch_size=batch_size)
 
     # Put in expected range
-    return np.clip(depth_norm(predictions, maxDepth=1000), minDepth, maxDepth) / maxDepth
+    return np.clip(depth_norm(predictions, max_depth=1000), minDepth, maxDepth) / maxDepth
 
 def scale_up(scale, images):
     scaled = []
@@ -53,10 +57,10 @@ def evaluate(model, rgb, depth, crop, batch_size=6, verbose=False):
     bs = batch_size
 
     for i in range(len(rgb)//bs):    
-        x = rgb[(i)*bs:(i+1)*bs,:,:,:]
+        x = rgb[i * bs:(i + 1) * bs, :, :, :]
         
         # Compute results
-        true_y = depth[(i)*bs:(i+1)*bs,:,:]
+        true_y = depth[i * bs:(i + 1) * bs, :, :]
         pred_y = scale_up(2, predict(model, x/255, minDepth=10, maxDepth=1000, batch_size=bs)[:,:,:,0]) * 10.0
         
         # Test time augmentation: mirror image estimate
