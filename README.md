@@ -4,14 +4,23 @@
  - The original code is at the repository [Dense Depth Original Code](https://github.com/ialhashim/DenseDepth)
  - [High Quality Monocular Depth Estimation via Transfer Learning](https://arxiv.org/abs/1812.11941) by Ibraheem Alhashim and Peter Wonka
 
+![a](readme\a.jpg)
+
 
 
 ### Configuration
 
 - Topics subscribed by the ROS node
-  - /image/camera_raw
+  - /image/camera_raw - Input image from camera (can be changed on the parameter topic_color)
 - Topics published by the ROS node, containing depth and point cloud data generated.
-  - /image/depth
+  - /image/depth - Image message containing the depth image estimated (can be changed on the parameter topic_depth).
+  - /pointcloud - Pointcloud2 message containing a estimated point cloud (can be changed on the parameter topic_pointcloud).
+- Parameters that can be configurated
+  - frame_id - TF Frame id to be published in the output messages.
+  - debug - If set true a window with the output result if displayed.
+  - min_depth, max_depth - Min and max depth values considered for scaling.
+  - batch_size - Batch size used when predicting the depth image using the model provided.
+  - model_file - Keras model file used, relative to the monodepth package.
 
 
 
@@ -34,7 +43,7 @@ pip install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-
 
 ### Pretrained models
 
- - Pre-trained keras models can be downloaded and placed in the models folder from the following links:
+ - Pre-trained keras models can be downloaded and placed in the /models folder from the following links:
     - [NYU Depth V2 (165MB)](https://s3-eu-west-1.amazonaws.com/densedepth/nyu.h5) 
     - [KITTI (165MB)](https://s3-eu-west-1.amazonaws.com/densedepth/kitti.h5)
 
