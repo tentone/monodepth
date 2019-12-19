@@ -4,7 +4,9 @@
  - The original code is at the repository [Dense Depth Original Code](https://github.com/ialhashim/DenseDepth)
  - [High Quality Monocular Depth Estimation via Transfer Learning](https://arxiv.org/abs/1812.11941) by Ibraheem Alhashim and Peter Wonka
 
-![a](readme\a.jpg)
+![a](https://raw.githubusercontent.com/tentone/monodepth/master/readme/a.jpg)
+
+![b](https://raw.githubusercontent.com/tentone/monodepth/master/readme/b.jpg)
 
 
 
@@ -29,7 +31,7 @@
 - Install Python 2 and ROS dependencies
 
 ```bash
-apt-get install python python-pip
+apt-get install python python-pip curl
 pip install rosdep rospkg rosinstall_generator rosinstall wstool vcstools catkin_tools catkin_pkg
 ```
 
@@ -37,6 +39,27 @@ pip install rosdep rospkg rosinstall_generator rosinstall wstool vcstools catkin
 
 ```bash
 pip install tensorflow keras pillow matplotlib scikit-learn scikit-image opencv-python pydot GraphViz tk
+```
+
+- Clone the project into your ROS workspace and download pretrained models
+
+```bash
+git clone https://github.com/tentone/monodepth.git
+cd monodepth/models
+curl –o nyu.h5 https://s3-eu-west-1.amazonaws.com/densedepth/nyu.h5
+```
+
+
+
+### Launch
+
+- Example ROS launch entry provided bellow, for easier integration into your already existing ROS launch pipeline.
+
+```xml
+<node pkg="monodepth" type="monodepth.py" name="monodepth" output="screen" respawn="true">
+    <param name="topic_color" value="/camera/image_raw"/>
+    <param name="topic_depth" value="/camera/depth"/>
+</node>
 ```
 
 
