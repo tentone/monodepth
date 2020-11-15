@@ -4,11 +4,7 @@
  - The original code is at the repository [Dense Depth Original Code](https://github.com/ialhashim/DenseDepth)
  - [High Quality Monocular Depth Estimation via Transfer Learning](https://arxiv.org/abs/1812.11941) by Ibraheem Alhashim and Peter Wonka
 
-![a](https://raw.githubusercontent.com/tentone/monodepth/master/readme/a.jpg)
-
-![b](https://raw.githubusercontent.com/tentone/monodepth/master/readme/b.jpg)
-
-
+<img src="https://raw.githubusercontent.com/tentone/monodepth/master/readme/c.png" width="370"><img src="https://raw.githubusercontent.com/tentone/monodepth/master/readme/d.png" width="370">
 
 ### Configuration
 
